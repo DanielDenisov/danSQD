@@ -147,7 +147,7 @@ template long ReadMemory<long>(pid_t pid, long address);
 template float ReadMemory<float>(pid_t pid, long address);
 template double ReadMemory<double>(pid_t pid, long address);
 template uintptr_t ReadMemory<uintptr_t>(pid_t pid, long address);
-template Vector3 ReadMemory<Vector3>(pid_t pid, long address);
+template FVector ReadMemory<FVector>(pid_t pid, long address);
 template VM::FCameraCacheEntry ReadMemory<VM::FCameraCacheEntry>(pid_t pid, long address);
 
 
@@ -162,7 +162,7 @@ template long ReadMemory<long>(uintptr_t address);
 template float ReadMemory<float>(uintptr_t address);
 template double ReadMemory<double>(uintptr_t address);
 template uintptr_t ReadMemory<uintptr_t>(uintptr_t address);
-template Vector3 ReadMemory<Vector3>(uintptr_t address);
+template FVector ReadMemory<FVector>(uintptr_t address);
 template VM::FCameraCacheEntry ReadMemory<VM::FCameraCacheEntry>(uintptr_t address);
 
 

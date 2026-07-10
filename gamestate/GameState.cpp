@@ -69,8 +69,8 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         ptr rootComp = ReadMemory<ptr>(pawn + off::PW_ROOT_COMP);
 
         //Get Position info
-        ent.pos = ReadMemory<Vector3>(rootComp + off::PW_POS);
-        if (ent.pos.Dist(Vector3{}) < 10) continue;
+        ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
+        if (ent.pos.Dist(FVector{}) < 10) continue;
 
         eret.push_back(ent);
     }

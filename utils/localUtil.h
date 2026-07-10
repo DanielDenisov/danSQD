@@ -9,7 +9,7 @@
 struct PlayerEnt {
     ptr memoryID{};
     int32_t teamID{};
-    Vector3 pos{};
+    FVector pos{};
     int health{100};
 
 };
