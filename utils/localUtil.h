@@ -13,6 +13,8 @@ struct PlayerEnt {
     float health{100.f};
     std::string username{};
     PlayerStateFlags plFlags{};
+    bool isCrouched{};
+    bool isProne{};
 };
 
 struct Vector2 {

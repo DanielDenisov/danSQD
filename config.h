@@ -60,6 +60,10 @@ namespace off {
     //TO ADD: If doing barrel ESP, would read rot, scale, pitch from here
     //ASQSoldier->Health
     pr PW_HEALTH = 0x2740; //float
+    //ACharacter->bIsCrouched
+    pr PW_IS_CROUCHED = 0x460;
+    //ASQSoldier->bIsProne
+    pr PW_IS_PRONE = 0x1F4C;
 
     //For reading local player info
     //UWorld->OwningGameInstance

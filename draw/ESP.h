@@ -41,8 +41,12 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPtea
 
         //Some weird inversion glitch here, but it prob does not matter too much
         // just makes the math look very wrong
-        FVector head3d = ent.pos; head3d.z += 90.f;
-        FVector feet3d = ent.pos; feet3d.z -= 90.f;
+        float edgeFromCenter = 90.0f;
+        if (ent.isCrouched) edgeFromCenter *= 0.75; //reduce
+        if (ent.isProne) edgeFromCenter *= 0.35; //reduce
+
+        FVector head3d = ent.pos; head3d.z += edgeFromCenter;
+        FVector feet3d = ent.pos; feet3d.z -= edgeFromCenter;
         Vector2 sfeet = WorldToScreen(feet3d, vm, config::SCREEN_W, config::SCREEN_H);
         Vector2 shead = WorldToScreen(head3d, vm, config::SCREEN_W, config::SCREEN_H);
 

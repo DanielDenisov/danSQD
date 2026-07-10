@@ -23,7 +23,9 @@ GSRet GameState::tick() {
         return {};
     }
     DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
-    ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
+    // ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
+
+    ents[0].pos.Print();
 
     LPRet lpret = getLPInfo(uworld);
     if (lpret.vm.FOV == 0) {
@@ -88,6 +90,20 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
         if (ent.pos.Dist(FVector{}) < 10) continue;
 
+        //Get if Crouching
+        uint8_t crouchByte = ReadMemory<uint8_t>(pawn + off::PW_IS_CROUCHED);
+        ent.isCrouched = (crouchByte & 2);
+
+        //Get if Prone
+        uint8_t proneByte = ReadMemory<uint8_t>(pawn + off::PW_IS_PRONE);
+        ent.isProne = (proneByte & 1);
+
+
+
+
+        //TODO: add detection of things outside of game loop like tanks and stuff
+
+        //TODO: change the display method to work in fullscreen
 
         eret.push_back(ent);
     }
