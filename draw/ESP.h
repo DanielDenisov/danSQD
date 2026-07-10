@@ -2,10 +2,52 @@
 #define DANSQD_ESP_H
 
 #include "config.h"
+#include "Overlay.h"
 #include "utils/localUtil.h"
 
-inline FVector WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight) {
-    FVector ScreenLocation = FVector(0, 0, 0);
+Vector2 WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight);
+
+namespace COLOR {
+#define IColor inline ImU32
+    inline ImU32 withAlpha(ImU32 color, int alpha) {
+        return (color & 0x00FFFFFF) | ((ImU32)(alpha & 0xFF) << 24);
+    }
+    inline int TRANS_VAL{150};
+
+    IColor RED = IM_COL32(207, 56, 56, 255);
+    IColor RED_TRANS = withAlpha(RED, TRANS_VAL);
+    IColor GREEN = IM_COL32(34, 189, 39, 255);
+    IColor GREEN_TRANS = withAlpha(GREEN, TRANS_VAL);
+    IColor WHITE = IM_COL32(34, 189, 39, 255);
+    IColor WHITE_TRANS = withAlpha(WHITE, TRANS_VAL);
+
+}
+
+inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPteam) {
+    for (PlayerEnt ent : ents) {
+        //check eligibility of player
+        if (ent.health < 0.1f) continue;
+        if (ent.pos.Dist(vm.Location) < 100) continue; //skip self
+
+        ImU32 color = COLOR::RED;
+        if (ent.teamID == LPteam) color = COLOR::GREEN;
+
+        FVector head = ent.pos; head.z += 90.f;
+        FVector feet = ent.pos; feet.z -= 90.f;
+        Vector2 sfeet = WorldToScreen(head, vm, config::SCREEN_W, config::SCREEN_H);
+        Vector2 shead = WorldToScreen(feet, vm, config::SCREEN_W, config::SCREEN_H);
+
+        sfeet.Print();
+
+        int height = sfeet.y - shead.y;
+        int w = height/2;
+        DrawBox(shead.x - w/2, shead.y, w, height, color);
+        DrawCircleFilled(shead.x, shead.y, 3, color);
+    }
+}
+
+inline Vector2 WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight) {
+    Vector2 ScreenLocation = Vector2{};
 
     FVector CameraLocation = CameraInfo.Location;
     FVector CameraRotation = CameraInfo.Rotation;
@@ -21,7 +63,7 @@ inline FVector WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo Camera
     // Check if the point is in front of the camera
     if (vTransformed.z <= 1.0f) {
         // Point is behind or on the camera plane, return an invalid or default position
-        return FVector(-1, -1, 0); // Example: Return an invalid screen position
+        return Vector2(-1, -1); // Example: Return an invalid screen position
     }
 
     float FovAngle = CameraInfo.FOV;

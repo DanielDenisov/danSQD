@@ -57,7 +57,7 @@ namespace off {
     pr PW_POS = 0x148;
     //TO ADD: If doing barrel ESP, would read rot, scale, pitch from here
     //ASQSoldier->Health
-    pr PW_HEALTH = 0x2740;
+    pr PW_HEALTH = 0x2740; //float
 
     //For reading local player info
     //UWorld->OwningGameInstance

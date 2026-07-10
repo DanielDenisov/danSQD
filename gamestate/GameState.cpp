@@ -22,8 +22,18 @@ GSRet GameState::tick() {
         std::this_thread::sleep_for(std::chrono::seconds(1));
         return {};
     }
+    DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
+    //Fake test entity
+    ents.push_back({0, 1, {-27877, 8100, 1500}, 100});
 
-    return {};
+    LPRet lpret = getLPInfo(uworld);
+    if (lpret.vm.FOV == 0) {
+        std::cout << "[-] Failed to find view matrix" << std::endl;
+        return {};
+    }
+    DBG{lpret.vm.Print();}
+
+    return {lpret.vm, ents, lpret.teamID};
 }
 
 uint64_t GameState::getUworld() {
@@ -64,13 +74,15 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         if (!pawn) continue;
 
         //Get Health
-        ent.health = ReadMemory<int>(pawn + off::PW_HEALTH);
+        ent.health = ReadMemory<float>(pawn + off::PW_HEALTH);
 
         ptr rootComp = ReadMemory<ptr>(pawn + off::PW_ROOT_COMP);
 
         //Get Position info
         ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
         if (ent.pos.Dist(FVector{}) < 10) continue;
+
+        //TODO: add username thing
 
         eret.push_back(ent);
     }

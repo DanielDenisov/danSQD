@@ -189,7 +189,7 @@ namespace fs = std::filesystem;
 
 pid_t FindGamePID() {
     // The exact executable naming convention seen in your Wine process dump
-    const std::string target_exe = "HLL-Win64-Shipping.exe";
+    const std::string target_exe = "SquadGame-Win64-Shipping.exe";
 
     for (const auto& entry : fs::directory_iterator("/proc")) {
         if (!entry.is_directory()) continue;

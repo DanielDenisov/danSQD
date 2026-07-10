@@ -5,7 +5,9 @@
 #include "utils/localUtil.h"
 
 struct GSRet {
-
+    VM::FMinimalViewInfo vm{};
+    std::vector<PlayerEnt> ents{};
+    int LPteam{};
 };
 
 class GameState {

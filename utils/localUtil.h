@@ -10,8 +10,16 @@ struct PlayerEnt {
     ptr memoryID{};
     int32_t teamID{};
     FVector pos{};
-    int health{100};
+    float health{100.f};
 
+};
+
+struct Vector2 {
+    double x{}, y{};
+
+    void Print() {
+        std::cout << "V2: " << x << " " << y << std::endl;
+    }
 };
 
 #endif //DANSQD_LOCALUTIL_H

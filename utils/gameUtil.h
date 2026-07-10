@@ -94,6 +94,14 @@ namespace VM {
         FVector Location;
         FVector Rotation;
         float FOV;
+
+        void Print() const {
+            printf("========== [ Camera View Info ] ==========\n");
+            printf("[+] Location : X: %7.2f | Y: %7.2f | Z: %7.2f\n", Location.x, Location.y, Location.z);
+            printf("[+] Rotation : P: %7.2f | Y: %7.2f | R: %7.2f\n", Rotation.x, Rotation.y, Rotation.z);
+            printf("[+] FOV      : %.2f\n", FOV);
+            printf("==========================================\n");
+        }
     };
 
     struct FCameraCacheEntry {
