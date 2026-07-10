@@ -5,6 +5,8 @@
 #include <signal.h>
 #include <vector>
 
+#include "utils/gameUtil.h"
+
 
 // Global variables, needed for easy read without a class
 
@@ -145,7 +147,7 @@ template long ReadMemory<long>(pid_t pid, long address);
 template float ReadMemory<float>(pid_t pid, long address);
 template double ReadMemory<double>(pid_t pid, long address);
 template uintptr_t ReadMemory<uintptr_t>(pid_t pid, long address);
-template uint8_t ReadMemory<uint8_t>(pid_t pid, long address);
+template Vector3 ReadMemory<Vector3>(pid_t pid, long address);
 
 
 template bool WriteMemory<int>(pid_t pid, long address, const int& value);
@@ -159,7 +161,7 @@ template long ReadMemory<long>(uintptr_t address);
 template float ReadMemory<float>(uintptr_t address);
 template double ReadMemory<double>(uintptr_t address);
 template uintptr_t ReadMemory<uintptr_t>(uintptr_t address);
-template uint8_t ReadMemory<uint8_t>(uintptr_t address);
+template Vector3 ReadMemory<Vector3>(uintptr_t address);
 
 //For reading player list or bone list and stuff
 // template TArray<uintptr_t> ReadMemory<TArray<uintptr_t>>(uintptr_t address);

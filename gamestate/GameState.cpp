@@ -1,0 +1,79 @@
+#include "GameState.h"
+
+#include <thread>
+
+#include "memory/memory.h"
+
+GameState::GameState(uint64_t gameBase) {
+    this->gameBase = gameBase;
+}
+
+GSRet GameState::tick() {
+    ptr uworld = getUworld();
+    if (!uworld) {
+        std::cout << "[-] Uworld not found"  << std::endl;
+        return {};
+    }
+    DBG{std::cout << "[+] Found uworld at " << std::hex << uworld << std::dec << std::endl;}
+
+    std::vector<PlayerEnt> ents = getEnts(uworld);
+    if (ents.empty()) {
+        std::cout << "[-] 0 Entities found"  << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        return {};
+    }
+
+    return {};
+}
+
+uint64_t GameState::getUworld() {
+    ptr uworld = ReadMemory<ptr>(this->gameBase + off::UWORLD);
+
+    return uworld;
+}
+
+std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
+    std::vector<PlayerEnt> eret{};
+
+    ptr gameState = ReadMemory<ptr>(uworld + off::GAME_STATE);
+    if (!gameState) {
+        std::cout << "[-] Failed to find gamestate" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found gamestate at 0x" << std::hex << gameState << std::dec << std::endl;}
+
+    ptr playerArray = ReadMemory<ptr>(gameState + off::PLAYER_ARRAY);
+    int PACount = ReadMemory<int>(gameState + off::PLAYER_ARRAY + sizeof(ptr));
+    if (!playerArray || PACount == 0) {
+        std::cout << "[-] Failed to find playerArray with count " << PACount << std::endl;
+        return {};
+    }
+    DBG{std::cout << "[+] Found playerArray at 0x" << std::hex << playerArray << std::dec << " with count " << PACount << std::endl;}
+
+    for (int a{}; a < PACount; a++) {
+        ptr plState = ReadMemory<ptr>(playerArray + a * sizeof(ptr));
+        if (!plState) continue;
+
+        PlayerEnt ent{};
+        ent.memoryID = plState;
+
+        //Get Team Info
+        ent.teamID = ReadMemory<int32_t>(plState + off::PL_TEAM_ID);
+
+        ptr pawn = ReadMemory<ptr>(plState + off::PL_PAWN);
+        if (!pawn) continue;
+
+        //Get Health
+        ent.health = ReadMemory<int>(pawn + off::PW_HEALTH);
+
+        ptr rootComp = ReadMemory<ptr>(pawn + off::PW_ROOT_COMP);
+
+        //Get Position info
+        ent.pos = ReadMemory<Vector3>(rootComp + off::PW_POS);
+        if (ent.pos.Dist(Vector3{}) < 10) continue;
+
+        eret.push_back(ent);
+    }
+
+    return eret;
+}

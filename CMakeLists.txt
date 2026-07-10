@@ -24,6 +24,10 @@ set(PROJECT_SOURCES
         memory/memory.h
         memory/memory.cpp
         draw/Overlay.h
+        gamestate/GameState.cpp
+        gamestate/GameState.h
+        utils/gameUtil.h
+        utils/localUtil.h
 )
 
 add_executable(danSQD ${PROJECT_SOURCES})
