@@ -22,47 +22,86 @@ namespace COLOR {
     IColor RED_TRANS = withAlpha(RED, TRANS_VAL);
     IColor GREEN = IM_COL32(34, 189, 39, 255);
     IColor GREEN_TRANS = withAlpha(GREEN, TRANS_VAL);
-    IColor WHITE = IM_COL32(34, 189, 39, 255);
+    IColor WHITE = IM_COL32(255, 255, 255, 255);
     IColor WHITE_TRANS = withAlpha(WHITE, TRANS_VAL);
 
 }
 
 inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPteam) {
+    std::string spectators{};
+
     for (PlayerEnt ent : ents) {
         int dist = ent.pos.Dist(vm.Location) / 100; //cm -> m
 
         //check eligibility of player
         if (ent.health < 0.1f) continue;
-        if (ent.pos.Dist(vm.Location) < 10) continue; //skip self. prob not needed cus team check
 
         ImU32 color = COLOR::RED;
         if (ent.teamID == LPteam) color = COLOR::GREEN_TRANS;
 
         //Some weird inversion glitch here, but it prob does not matter too much
         // just makes the math look very wrong
-        FVector head = ent.pos; head.z += 90.f;
-        FVector feet = ent.pos; feet.z -= 90.f;
-        Vector2 sfeet = WorldToScreen(head, vm, config::SCREEN_W, config::SCREEN_H);
-        Vector2 shead = WorldToScreen(feet, vm, config::SCREEN_W, config::SCREEN_H);
+        FVector head3d = ent.pos; head3d.z += 90.f;
+        FVector feet3d = ent.pos; feet3d.z -= 90.f;
+        Vector2 sfeet = WorldToScreen(feet3d, vm, config::SCREEN_W, config::SCREEN_H);
+        Vector2 shead = WorldToScreen(head3d, vm, config::SCREEN_W, config::SCREEN_H);
+
+        int height = sfeet.y - shead.y;
+        int w = height/2;
 
         int gap = getProportionalGap(dist, config::FarthestPlayerDist);
         if (ent.teamID == LPteam) {
-            DrawCircleFilled(head.x, head.y - gap - 10, 5, color);
+            DrawCircleFilled(shead.x, shead.y - gap - 10, 5, color);
         } else {
-            int height = sfeet.y - shead.y;
-            int w = height/2;
             DrawBox(shead.x - w/2, shead.y, w, height, color);
 
             //health stuff
-            int lineX = shead.x - w/2 + gap + 4;
+            int lineX = shead.x + w/2 + gap + 4;
             DrawLine(lineX, shead.y, lineX, sfeet.y, COLOR::GREEN_TRANS);
             if (ent.health < 100.f) {
-                int YStop = shead.y + (height * (ent.health/100));
-                DrawLine(lineX, sfeet.y, lineX, YStop, COLOR::RED_TRANS);
+                int YStop = shead.y + height-(height * (ent.health/100));
+                DrawLine(lineX, shead.y, lineX, YStop, COLOR::RED_TRANS);
             }
         }
 
+        char dBuf[64];
+        sprintf(dBuf, "%.0im", dist);
+        DrawTextCentered(shead.x, shead.y - gap - 4, COLOR::WHITE_TRANS, dBuf);
 
+        char pBuf[64];
+        sprintf(pBuf, "%s", ent.username.c_str());
+        DrawTextCentered(sfeet.x, sfeet.y + gap + 4, COLOR::WHITE_TRANS, pBuf);
+
+        int txtStack = 0; //prevents text from stacking on itself
+        int txtJump = 15;
+        txtStack = txtJump + 4/*base*/;
+
+        if (ent.plFlags.bIsABot()) {
+            DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(BOT)");
+            txtStack += txtJump;
+        }
+
+        if (ent.plFlags.bIsInactive()) {
+            DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(INC)");
+            txtStack += txtJump;
+        }
+
+        if (ent.plFlags.bIsSpectator() || ent.plFlags.bOnlySpectator()) {
+            int yLvl = shead.y - gap - txtStack;
+            DrawLine(shead.x - w/2, yLvl, shead.x + w/2, yLvl, COLOR::WHITE, 10);
+            DrawTextCentered(shead.x, yLvl, COLOR::RED, "(SPECTATOR)");
+            txtStack += txtJump;
+
+            spectators += ent.username + ", ";
+        }
+    }
+    if (!spectators.empty()) {
+        spectators.resize(spectators.size() - 2); //cut trailing comma + space
+
+        char psBuf[1024];
+        sprintf(psBuf, "Being spectated by: %s", spectators.c_str());
+        DrawLine(config::SCREEN_W-1000, 15, config::SCREEN_W, 15, COLOR::WHITE, 30);
+        DrawTextImGui(config::SCREEN_W-1000, 8, COLOR::RED, psBuf);
     }
 }
 

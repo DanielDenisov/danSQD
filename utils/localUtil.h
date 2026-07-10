@@ -11,7 +11,8 @@ struct PlayerEnt {
     int32_t teamID{};
     FVector pos{};
     float health{100.f};
-
+    std::string username{};
+    PlayerStateFlags plFlags{};
 };
 
 struct Vector2 {

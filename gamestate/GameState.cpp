@@ -23,8 +23,7 @@ GSRet GameState::tick() {
         return {};
     }
     DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
-    //Fake test entity
-    ents.push_back({0, 1, {-27877, 8100, 1500}, 80});
+    ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
 
     LPRet lpret = getLPInfo(uworld);
     if (lpret.vm.FOV == 0) {
@@ -70,6 +69,13 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         //Get Team Info
         ent.teamID = ReadMemory<int32_t>(plState + off::PL_TEAM_ID);
 
+        //Get Username
+        ent.username = ReadFString(plState + off::PL_PLAYER_NAME_PRIVATE);
+
+        //Get Flags
+        ent.plFlags = ReadMemory<PlayerStateFlags>(plState + off::PL_bShouldUpdateReplicatedPing);
+
+
         ptr pawn = ReadMemory<ptr>(plState + off::PL_PAWN);
         if (!pawn) continue;
 
@@ -82,7 +88,6 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
         if (ent.pos.Dist(FVector{}) < 10) continue;
 
-        //TODO: add username thing
 
         eret.push_back(ent);
     }

@@ -24,8 +24,8 @@ void ReadMemoryBuffer(uintptr_t address, void* buffer, size_t size); //Overload 
 template<typename T>
 bool WriteMemory(pid_t pid, long address, const T& value);
 
-// Read a string from memory with maximum length
-std::string ReadString(pid_t pid, long address, size_t maxLength = 128);
+std::string ReadFString(pid_t pid, long fstringAddress);
+std::string ReadFString (uintptr_t address);
 
 pid_t FindGamePID();
 
