@@ -23,7 +23,7 @@ GSRet GameState::tick() {
         return {};
     }
     DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
-    // ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
+    ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
 
     ents[0].pos.Print();
 

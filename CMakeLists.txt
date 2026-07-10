@@ -6,11 +6,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DRM     REQUIRED libdrm)
+pkg_check_modules(WAYLAND REQUIRED wayland-client)
 set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/imgui")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${IMGUI_DIR})
 include_directories(${IMGUI_DIR}/backends)
+include_directories(${DRM_INCLUDE_DIRS})
+include_directories(${WAYLAND_INCLUDE_DIRS})
 
 set(PROJECT_SOURCES
         ${IMGUI_DIR}/imgui.cpp
@@ -23,7 +28,7 @@ set(PROJECT_SOURCES
         config.h
         memory/memory.h
         memory/memory.cpp
-        draw/Overlay.h
+        draw/WLLayerOverlay.h
         draw/ESP.h
         gamestate/GameState.cpp
         gamestate/GameState.h
@@ -33,4 +38,4 @@ set(PROJECT_SOURCES
 
 add_executable(danSQD ${PROJECT_SOURCES})
 
-target_link_libraries(danSQD PRIVATE glfw OpenGL::GL)
+target_link_libraries(danSQD PRIVATE glfw OpenGL::GL ${DRM_LIBRARIES} ${WAYLAND_LIBRARIES})

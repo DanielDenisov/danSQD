@@ -2,7 +2,7 @@
 #include <csignal>
 
 #include "draw/ESP.h"
-#include "draw/Overlay.h"
+#include "draw/WLLayerOverlay.h"
 #include "gamestate/GameState.h"
 #include "memory/memory.h"
 
@@ -13,7 +13,7 @@ int main() {
 
     std::signal(SIGINT, SignalHandler);
     if (!InitOverlay()) {
-        std::cerr << "[-] Failed to init Overlay (GLFW/Wayland)" << std::endl;
+        std::cerr << "[-] Failed to init overlay" << std::endl;
         return 1;
     }
 
@@ -24,7 +24,7 @@ int main() {
     }
 
     GameState gs = GameState();
-    while (g_Running && !glfwWindowShouldClose(window)) {
+    while (g_Running && wl_ov::g.ok) {
         GSRet gsr = gs.tick();
 
         RenderBegin();
@@ -39,19 +39,7 @@ int main() {
     }
     std::cout << "[+] Destructing Window" << std::endl;
 
-    if (ImGui::GetCurrentContext()) {
-        if (ImGui::GetIO().BackendRendererUserData)
-            ImGui_ImplOpenGL3_Shutdown();
+    CleanupOverlay();
 
-        if (ImGui::GetIO().BackendPlatformUserData)
-            ImGui_ImplGlfw_Shutdown();
-
-        ImGui::DestroyContext();
-    }
-
-    if (window) {
-        glfwHideWindow(window);
-        glfwDestroyWindow(window);
-    }
     return 0;
 }

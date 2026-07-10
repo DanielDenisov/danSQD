@@ -2,7 +2,7 @@
 #define DANSQD_ESP_H
 
 #include "config.h"
-#include "Overlay.h"
+#include "WLLayerOverlay.h"
 #include "utils/localUtil.h"
 
 Vector2 WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight);
