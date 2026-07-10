@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         memory/memory.h
         memory/memory.cpp
         draw/Overlay.h
+        draw/ESP.h
         gamestate/GameState.cpp
         gamestate/GameState.h
         utils/gameUtil.h

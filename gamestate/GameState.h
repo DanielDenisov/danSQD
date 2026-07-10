@@ -21,6 +21,11 @@ private:
 
     std::vector<PlayerEnt> getEnts(ptr uworld);
 
+    struct LPRet {
+        VM::FMinimalViewInfo vm{};
+        int teamID{};
+    };
+    LPRet getLPInfo(ptr uworld);
 
 };
 

@@ -77,3 +77,44 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
 
     return eret;
 }
+
+GameState::LPRet GameState::getLPInfo(uint64_t uworld) {
+    LPRet lpret;
+    ptr owngame = ReadMemory<ptr>(uworld + off::OWNING_GAME_INST);
+    if (!owngame) {
+        std::cout << "[-] Failed to find owning game inst" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found owning game inst at 0x" << std::hex << owngame << std::dec << std::endl;}
+
+    ptr localPlayers = ReadMemory<ptr>(owngame + off::LOCAL_PLAYERS);
+    ptr localPlayer = ReadMemory<ptr>(localPlayers); //because only 1
+    if (!localPlayer) {
+        std::cout << "[-] Failed to find localPlayer" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found localPlayer at 0x" << std::hex << localPlayer << std::dec << std::endl;}
+
+    ptr playerController = ReadMemory<ptr>(localPlayer + off::PLAYER_CONTROLLER);
+    if (!playerController) {
+        std::cout << "[-] Failed to find playerController" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found playerController at 0x" << std::hex << playerController << std::dec << std::endl;}
+
+    ptr pawn = ReadMemory<ptr>(playerController + off::ACK_PAWN);
+    ptr playerState = ReadMemory<ptr>(pawn + off::PW_PLAYER_STATE);
+    lpret.teamID = ReadMemory<int32_t>(playerState + off::PL_TEAM_ID);
+
+    ptr camManager = ReadMemory<ptr>(playerController + off::PL_PLAYER_CAM_MANAGER);
+    if (!camManager) {
+        std::cout << "[-] Failed to find camManager" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found camManager at 0x" << std::hex << camManager << std::dec << std::endl;}
+
+    VM::FCameraCacheEntry vmtemp = ReadMemory<VM::FCameraCacheEntry>(camManager + off::CAM_CACHE_PRIVATE);
+    lpret.vm = vmtemp.viewInfo;
+
+    return lpret;
+}
