@@ -7,6 +7,10 @@
 
 Vector2 WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight);
 
+inline double getProportionalGap(double dist, double maxDist) {
+    return (1-(dist/maxDist)) * 6;
+}
+
 namespace COLOR {
 #define IColor inline ImU32
     inline ImU32 withAlpha(ImU32 color, int alpha) {
@@ -25,24 +29,40 @@ namespace COLOR {
 
 inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPteam) {
     for (PlayerEnt ent : ents) {
+        int dist = ent.pos.Dist(vm.Location) / 100; //cm -> m
+
         //check eligibility of player
         if (ent.health < 0.1f) continue;
-        if (ent.pos.Dist(vm.Location) < 100) continue; //skip self
+        if (ent.pos.Dist(vm.Location) < 10) continue; //skip self. prob not needed cus team check
 
         ImU32 color = COLOR::RED;
-        if (ent.teamID == LPteam) color = COLOR::GREEN;
+        if (ent.teamID == LPteam) color = COLOR::GREEN_TRANS;
 
+        //Some weird inversion glitch here, but it prob does not matter too much
+        // just makes the math look very wrong
         FVector head = ent.pos; head.z += 90.f;
         FVector feet = ent.pos; feet.z -= 90.f;
         Vector2 sfeet = WorldToScreen(head, vm, config::SCREEN_W, config::SCREEN_H);
         Vector2 shead = WorldToScreen(feet, vm, config::SCREEN_W, config::SCREEN_H);
 
-        sfeet.Print();
+        int gap = getProportionalGap(dist, config::FarthestPlayerDist);
+        if (ent.teamID == LPteam) {
+            DrawCircleFilled(head.x, head.y - gap - 10, 5, color);
+        } else {
+            int height = sfeet.y - shead.y;
+            int w = height/2;
+            DrawBox(shead.x - w/2, shead.y, w, height, color);
 
-        int height = sfeet.y - shead.y;
-        int w = height/2;
-        DrawBox(shead.x - w/2, shead.y, w, height, color);
-        DrawCircleFilled(shead.x, shead.y, 3, color);
+            //health stuff
+            int lineX = shead.x - w/2 + gap + 4;
+            DrawLine(lineX, shead.y, lineX, sfeet.y, COLOR::GREEN_TRANS);
+            if (ent.health < 100.f) {
+                int YStop = shead.y + (height * (ent.health/100));
+                DrawLine(lineX, sfeet.y, lineX, YStop, COLOR::RED_TRANS);
+            }
+        }
+
+
     }
 }
 

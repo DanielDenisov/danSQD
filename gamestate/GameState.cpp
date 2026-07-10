@@ -24,7 +24,7 @@ GSRet GameState::tick() {
     }
     DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
     //Fake test entity
-    ents.push_back({0, 1, {-27877, 8100, 1500}, 100});
+    ents.push_back({0, 1, {-27877, 8100, 1500}, 80});
 
     LPRet lpret = getLPInfo(uworld);
     if (lpret.vm.FOV == 0) {
@@ -114,9 +114,13 @@ GameState::LPRet GameState::getLPInfo(uint64_t uworld) {
     }
     DBG{std::cout << "[+] Found playerController at 0x" << std::hex << playerController << std::dec << std::endl;}
 
-    ptr pawn = ReadMemory<ptr>(playerController + off::ACK_PAWN);
-    ptr playerState = ReadMemory<ptr>(pawn + off::PW_PLAYER_STATE);
-    lpret.teamID = ReadMemory<int32_t>(playerState + off::PL_TEAM_ID);
+    ptr playerState = ReadMemory<ptr>(playerController + off::CT_PlayerState);
+    DBG{std::cout << "[+] Found playerState at 0x" << std::hex << playerState << std::dec << std::endl;}
+    if (playerState) {
+        lpret.teamID = ReadMemory<int32_t>(playerState + off::PL_TEAM_ID);
+        DBG{std::cout << "[+] LP TeamID: " << lpret.teamID << std::endl;}
+    } else { DBG{std::cout << "[-] No Local Player State found" << std::endl;} }
+
 
     ptr camManager = ReadMemory<ptr>(playerController + off::PL_PLAYER_CAM_MANAGER);
     if (!camManager) {

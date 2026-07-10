@@ -117,27 +117,42 @@ bool WriteMemory(pid_t pid, long address, const T& value)
 }
 
 // Read a string from memory with maximum length
-std::string ReadString(pid_t pid, long address, size_t maxLength)
+std::string ReadFString(pid_t pid, long fstringAddress)
 {
-    std::vector<char> buffer(maxLength, 0);
+    // 1. Read the 16-byte FString structure header
+    struct UnrealFString {
+        long dataPointer;  // 8 bytes (ptr to chars)
+        int arrayNum;      // 4 bytes (current length)
+        int arrayMax;      // 4 bytes (capacity)
+    } fstr{};
 
-    struct iovec local[1];
-    struct iovec remote[1];
+    ReadMemoryBuffer(pid, fstringAddress, &fstr, sizeof(fstr));
 
-    local[0].iov_base = buffer.data();
-    local[0].iov_len = maxLength;
-    remote[0].iov_base = (void*)address;
-    remote[0].iov_len = maxLength;
-
-    ssize_t nread = process_vm_readv(pid, local, 1, remote, 1, 0);
-    if (nread <= 0)
-    {
+    // Sanity checks to prevent allocation crashes from bad pointers
+    if (fstr.dataPointer == 0 || fstr.arrayNum <= 0 || fstr.arrayNum > 1024) {
         return "";
     }
 
-    // Ensure null-termination
-    buffer[maxLength - 1] = '\0';
-    return std::string(buffer.data());
+    // 2. Read the actual characters from the heap pointer
+    // Unreal Engine uses UTF-16 (wchar_t / char16_t) for strings
+    std::vector<char16_t> wcharBuffer(fstr.arrayNum);
+    size_t bytesToRead = fstr.arrayNum * sizeof(char16_t);
+
+    ReadMemoryBuffer(pid, fstr.dataPointer, wcharBuffer.data(), bytesToRead);
+
+
+    // 3. Convert UTF-16/wchar string to a standard UTF-8 std::string
+    std::string result;
+    for (int i = 0; i < fstr.arrayNum - 1; ++i) { // -1 to skip null terminator
+        // Simple conversion for standard ASCII characters
+        result += static_cast<char>(wcharBuffer[i]);
+    }
+
+    return result;
+}
+
+std::string ReadFString (uintptr_t address) {
+    return ReadFString(ProcessId, address);
 }
 
 

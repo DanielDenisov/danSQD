@@ -12,6 +12,8 @@ namespace config {
     const inline int SCREEN_H = 1405;
     const inline int SCREEN_W = 2560;
 
+    const inline int FarthestPlayerDist = 400;
+
     inline const auto OVERLAY_NAME = "Better Discord Overlay";
 }
 
@@ -67,10 +69,8 @@ namespace off {
     //UPlayer->PlayerController
     pr PLAYER_CONTROLLER = 0x30;
     //For Reading TeadId of the
-    //AController->Pawn
-    pr ACK_PAWN = 0x308;
-    //APawn->PlayerState
-    pr PW_PLAYER_STATE = 0x240;
+    //AController->PlayerState
+    pr CT_PlayerState = 0x2C0;
     //can now read localplayer team ID
 
     //APlayerController->PlayerCameraManager
