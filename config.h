@@ -82,7 +82,18 @@ namespace off {
     //APlayerCameraManager->CameraCachePrivate;
     pr CAM_CACHE_PRIVATE = 0x15b0; //type FCameraCacheEntry
 
-    //Fun info from pawn in ASQSoldier
+    //Uworld->PersistentLevel
+    pr PRESISTENT_LVL = 0x30;
+    //Either 0x98 to 0xA0
+    pr PL_ACTOR_ARRAY = 0x98;
+    //only for vehicals
+    //ASQVehicle->ClaimedBySquad
+    pr CLAIMED_BY_SQUAD = 0x670; //type ASQSquadState
+    //ASQSquadState->TeamId
+    pr SQ_TEAM_ID = 0x34C;
+
+    //ASQVehicle->VehicleType
+    pr VehicalType = 0x7e0;
 
 
 }

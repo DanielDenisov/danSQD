@@ -27,8 +27,19 @@ namespace COLOR {
 
 }
 
-inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPteam) {
+inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vector<VehicalEnt>& vents, int LPteam) {
     std::string spectators{};
+
+    // for (VehicalEnt vent : vents) {
+    //     int dist = vent.pos.Dist(vm.Location) / 100;
+    //     // if (dist > 100) continue;
+    //
+    //     Vector2 dot = WorldToScreen(vent.pos, vm, config::SCREEN_W, config::SCREEN_H);
+    //
+    //     char dBuf[64];
+    //     sprintf(dBuf, "%" PRIuPTR, vent.vtable);
+    //     DrawTextCentered(dot.x, dot.y, COLOR::WHITE, dBuf);
+    // }
 
     for (PlayerEnt ent : ents) {
         int dist = ent.pos.Dist(vm.Location) / 100; //cm -> m
@@ -67,6 +78,7 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, int LPtea
                 DrawLine(lineX, shead.y, lineX, YStop, COLOR::RED_TRANS);
             }
         }
+
 
         char dBuf[64];
         sprintf(dBuf, "%.0im", dist);

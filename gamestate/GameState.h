@@ -7,6 +7,7 @@
 struct GSRet {
     VM::FMinimalViewInfo vm{};
     std::vector<PlayerEnt> ents{};
+    std::vector<VehicalEnt> vents{};
     int LPteam{};
 };
 
@@ -22,6 +23,8 @@ private:
     ptr getUworld();
 
     std::vector<PlayerEnt> getEnts(ptr uworld);
+
+    std::vector<VehicalEnt> getVehInfo(ptr uworld);
 
     struct LPRet {
         VM::FMinimalViewInfo vm{};

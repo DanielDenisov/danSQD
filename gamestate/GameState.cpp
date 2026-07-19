@@ -16,16 +16,23 @@ GSRet GameState::tick() {
     }
     DBG{std::cout << "[+] Found uworld at " << std::hex << uworld << std::dec << std::endl;}
 
+    bool noEntsFound = false;
     std::vector<PlayerEnt> ents = getEnts(uworld);
     if (ents.empty()) {
         std::cout << "[-] 0 Entities found"  << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        return {};
+        noEntsFound = true;
     }
     DBG{std::cout << "[+] Found " << ents.size() << " entities" << std::endl;}
     // ents.push_back(PlayerEnt{0, 10, {-27520, 8220, 1400}, 80, "guy", {}});
+    // ents[0].pos.Print();
 
-    ents[0].pos.Print();
+    // std::vector<VehicalEnt> vents = getVehInfo(uworld);
+    // if (vents.empty() && noEntsFound) {
+    //     std::cout << "[-] No Vehicles OR Player found" << std::endl;
+    //     std::this_thread::sleep_for(std::chrono::seconds(1));
+    //     return {};
+    // }
+    // DBG{std::cout << "[+] Found " << ents.size() << " veh" << std::endl;}
 
     LPRet lpret = getLPInfo(uworld);
     if (lpret.vm.FOV == 0) {
@@ -34,7 +41,9 @@ GSRet GameState::tick() {
     }
     DBG{lpret.vm.Print();}
 
-    return {lpret.vm, ents, lpret.teamID};
+
+
+    return {lpret.vm, ents, {}, lpret.teamID};
 }
 
 uint64_t GameState::getUworld() {
@@ -98,17 +107,59 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         uint8_t proneByte = ReadMemory<uint8_t>(pawn + off::PW_IS_PRONE);
         ent.isProne = (proneByte & 1);
 
-
-
-
-        //TODO: add detection of things outside of game loop like tanks and stuff
-
-        //TODO: change the display method to work in fullscreen
-
         eret.push_back(ent);
     }
 
     return eret;
+}
+
+/* Notes fom implementation
+ * Persistent Level does not work
+ * Will require the you to lop through UWorld->Levels to find the vehical level
+*/
+std::vector<VehicalEnt> GameState::getVehInfo(uint64_t uworld) {
+    ptr presLevel = ReadMemory<ptr>(uworld + off::PRESISTENT_LVL);
+    if (!presLevel) {
+        std::cout << "[-] Failed to find pres level inst" << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found pres level at 0x" << std::hex << presLevel << std::dec << std::endl;}
+
+    ptr actorArray = ReadMemory<ptr>(presLevel + off::PL_ACTOR_ARRAY);
+    int count = ReadMemory<int>(presLevel + off::PL_ACTOR_ARRAY + sizeof(ptr));
+    if (!actorArray || count == 0) {
+        std::cout << "[-] Failed to find actor array, size of " << count << std::endl;
+        return{};
+    }
+    DBG{std::cout << "[+] Found owning game inst at 0x" << std::hex << actorArray << std::dec << " with count " << count << std::endl;}
+
+    std::vector<VehicalEnt> entList{};
+
+    for (int i{}; i < count; i++) {
+        ptr pawn = ReadMemory<ptr>(actorArray + sizeof(ptr) * i);
+        if (!pawn) continue;
+
+        ptr vtable = ReadMemory<ptr>(pawn);
+
+        VehicalEnt ent{};
+
+        ent.vtable = pawn;
+
+        //Check Team
+        // ptr claimedBySquad = ReadMemory<ptr>(pawn + off::CLAIMED_BY_SQUAD);
+        // if (!claimedBySquad) continue;
+        //
+        // ent.team = ReadMemory<int>(claimedBySquad + off::SQ_TEAM_ID);
+        //
+        // //Get Pos
+        // ptr rootComp = ReadMemory<ptr>(pawn + off::PW_ROOT_COMP);
+        // ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
+        // if (ent.pos.Dist(FVector{}) < 10) continue;
+
+        entList.push_back(ent);
+    }
+
+    return entList;
 }
 
 GameState::LPRet GameState::getLPInfo(uint64_t uworld) {

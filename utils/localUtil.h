@@ -6,6 +6,12 @@
 #include "config.h"
 #include "gameUtil.h"
 
+struct VehicalEnt {
+    ptr vtable{};
+    FVector pos{};
+    int team{};
+};
+
 struct PlayerEnt {
     ptr memoryID{};
     int32_t teamID{};
