@@ -22,25 +22,17 @@ namespace COLOR {
     IColor RED_TRANS = withAlpha(RED, TRANS_VAL);
     IColor GREEN = IM_COL32(34, 189, 39, 255);
     IColor GREEN_TRANS = withAlpha(GREEN, TRANS_VAL);
+    IColor BLUE = IM_COL32(43, 145, 235, 255);
+    IColor BLUE_TRANS = withAlpha(BLUE, TRANS_VAL);
     IColor WHITE = IM_COL32(255, 255, 255, 255);
     IColor WHITE_TRANS = withAlpha(WHITE, TRANS_VAL);
 
 }
 
-inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vector<VehicalEnt>& vents, int LPteam) {
+//retuens list of spectatorsbut basically a void
+inline std::string DrawEnts(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vector<VehicalEnt>&, int LPteam, bool isScoped = false) {
+    ImU32 healthColor = isScoped ? COLOR::BLUE_TRANS : COLOR::GREEN_TRANS;
     std::string spectators{};
-
-    // for (VehicalEnt vent : vents) {
-    //     int dist = vent.pos.Dist(vm.Location) / 100;
-    //     // if (dist > 100) continue;
-    //
-    //     Vector2 dot = WorldToScreen(vent.pos, vm, config::SCREEN_W, config::SCREEN_H);
-    //
-    //     char dBuf[64];
-    //     sprintf(dBuf, "%" PRIuPTR, vent.vtable);
-    //     DrawTextCentered(dot.x, dot.y, COLOR::WHITE, dBuf);
-    // }
-
     for (PlayerEnt ent : ents) {
         int dist = ent.pos.Dist(vm.Location) / 100; //cm -> m
 
@@ -66,13 +58,14 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vect
 
         int gap = getProportionalGap(dist, config::FarthestPlayerDist);
         if (ent.teamID == LPteam) {
-            DrawCircleFilled(shead.x, shead.y - gap - 10, 5, color);
+            // DrawCircleFilled(shead.x, shead.y - gap - 10, 5, color);
+            continue;
         } else {
-            DrawBox(shead.x - w/2, shead.y, w, height, color);
+            // DrawBox(shead.x - w/2, shead.y, w, height, color);
 
             //health stuff
             int lineX = shead.x + w/2 + gap + 4;
-            DrawLine(lineX, shead.y, lineX, sfeet.y, COLOR::GREEN_TRANS);
+            DrawLine(lineX, shead.y, lineX, sfeet.y, healthColor);
             if (ent.health < 100.f) {
                 int YStop = shead.y + height-(height * (ent.health/100));
                 DrawLine(lineX, shead.y, lineX, YStop, COLOR::RED_TRANS);
@@ -82,25 +75,27 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vect
 
         char dBuf[64];
         sprintf(dBuf, "%.0im", dist);
+        if (ent.isCrouched) sprintf(dBuf, "%.0im (C)", dist);
+        if (ent.isProne) sprintf(dBuf, "%.0im (P)", dist);
         DrawTextCentered(shead.x, shead.y - gap - 4, COLOR::WHITE_TRANS, dBuf);
 
-        char pBuf[64];
-        sprintf(pBuf, "%s", ent.username.c_str());
-        DrawTextCentered(sfeet.x, sfeet.y + gap + 4, COLOR::WHITE_TRANS, pBuf);
+        // char pBuf[64];
+        // sprintf(pBuf, "%s", ent.username.c_str());
+        // DrawTextCentered(sfeet.x, sfeet.y + gap + 4, COLOR::WHITE_TRANS, pBuf);
 
         int txtStack = 0; //prevents text from stacking on itself
         int txtJump = 15;
         txtStack = txtJump + 4/*base*/;
 
-        if (ent.plFlags.bIsABot()) {
-            DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(BOT)");
-            txtStack += txtJump;
-        }
-
-        if (ent.plFlags.bIsInactive()) {
-            DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(INC)");
-            txtStack += txtJump;
-        }
+        // if (ent.plFlags.bIsABot()) {
+        //     DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(BOT)");
+        //     txtStack += txtJump;
+        // }
+        //
+        // if (ent.plFlags.bIsInactive()) {
+        //     DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(INC)");
+        //     txtStack += txtJump;
+        // }
 
         if (ent.plFlags.bIsSpectator() || ent.plFlags.bOnlySpectator()) {
             int yLvl = shead.y - gap - txtStack;
@@ -110,16 +105,88 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vect
 
             spectators += ent.username + ", ";
         }
+        // if (ent.plFlags.bIsABot()) {
+        //     DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(BOT)");
+        //     txtStack += txtJump;
+        // }
+        //
+        // if (ent.plFlags.bIsInactive()) {
+        //     DrawTextCentered(shead.x, shead.y - gap - txtStack, COLOR::WHITE, "(INC)");
+        //     txtStack += txtJump;
+        // }
     }
-    if (!spectators.empty()) {
-        spectators.resize(spectators.size() - 2); //cut trailing comma + space
+    return spectators;
+}
+inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vector<VehicalEnt>& vents, int LPteam, double scopeMagnification, bool isRMBDown) {
+    // All of Overlay.h's Draw* helpers draw into the background draw list (a layer
+    // rendered before/behind every ImGui window), not the current window's draw
+    // list. ImGui::PushClipRect()/PopClipRect() only affect the *current window's*
+    // draw list, so pushing a clip rect that way silently clips nothing here - we
+    // have to push it directly onto the same ImDrawList the entities are drawn into.
+    ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
-        char psBuf[1024];
-        sprintf(psBuf, "Being spectated by: %s", spectators.c_str());
-        DrawLine(config::SCREEN_W-1000, 15, config::SCREEN_W, 15, COLOR::WHITE, 30);
-        DrawTextImGui(config::SCREEN_W-1000, 8, COLOR::RED, psBuf);
+    // Define center anchors and scope glass geometry
+    float centerX = config::SCREEN_W / 2.0f;
+    float centerY = config::SCREEN_H / 2.0f;
+    float scopeGlassRadius = static_cast<float>((int)centerY * 0.4);
+
+    // Create a generated scope matrix using your dynamic magnification factor
+    VM::FMinimalViewInfo scopeVM = vm;
+    if (scopeMagnification > 1.01f) {
+        scopeVM.FOV /= static_cast<float>(scopeMagnification);
+    }
+
+    // Allocate two separate entity vectors to isolate our visual environments
+    std::vector<PlayerEnt> backgroundPlayers;
+    std::vector<PlayerEnt> scopePlayers;
+
+    // --- SORT ENEMIES BASED ON VISUAL SPACE ---
+    for (const auto& ent : ents) {
+        // Project everyone using the unmagnified baseline first to locate them in 2D space
+        Vector2 sfeet = WorldToScreen(ent.pos, vm, config::SCREEN_W, config::SCREEN_H);
+
+        // Calculate exact distance from the center of your monitor
+        float distToCenter = std::sqrt(std::pow(sfeet.x - centerX, 2) + std::pow(sfeet.y - centerY, 2));
+
+        if (isRMBDown && scopeMagnification > 1.01f && distToCenter < scopeGlassRadius) {
+            // Target is physically inside the scope lens circle area -> Route to the scope list
+            scopePlayers.push_back(ent);
+        } else {
+            // Target is in your peripheral vision around the lens -> Route to background list
+            backgroundPlayers.push_back(ent);
+        }
+    }
+
+    // --- STEP 1: DRAW THE UNMAGNIFIED BACKGROUND AREA ---
+    // Only pass the players who are safely outside your lens perimeter bounds
+    DrawEnts(vm, backgroundPlayers, vents, LPteam, false);
+
+    // --- STEP 2: DRAW THE CLEAN MAGNIFIED SCOPE INTERIOR AREA ---
+    if (isRMBDown && scopeMagnification > 1.01f) {
+
+        // Magnification pushes scoped entities' projected positions outward from
+        // center, so they can end up drawn well past the lens circle. Clip to the
+        // square inscribed *inside* the circle (side = r*sqrt(2)) rather than the
+        // square that circumscribes it - that guarantees nothing ever renders past
+        // the visible lens boundary. Clipping to the circumscribed square instead
+        // would let content bleed into the four corner slivers between the square
+        // and the circle, which is exactly the leftover "erase outside" bug.
+        float clipHalf = scopeGlassRadius / std::sqrt(2.0f);
+        ImVec2 clipMin(centerX - clipHalf, centerY - clipHalf);
+        ImVec2 clipMax(centerX + clipHalf, centerY + clipHalf);
+        drawList->PushClipRect(clipMin, clipMax, true);
+
+        // Pass ONLY your scope-trapped target metrics to be processed by your magnified view profile
+        DrawEnts(scopeVM, scopePlayers, vents, LPteam, true);
+
+        drawList->PopClipRect();
+
+        // Draw structural scope frame outer rim circle overlay to complete the pipeline pass
+        drawList->AddCircle(ImVec2(centerX, centerY), scopeGlassRadius, IM_COL32(0, 0, 0, 255), 64, 3.0f);
     }
 }
+
+
 
 inline Vector2 WorldToScreen(FVector TargetLocation, VM::FMinimalViewInfo CameraInfo, float ScreenWidth, float ScreenHeight) {
     Vector2 ScreenLocation = Vector2{};

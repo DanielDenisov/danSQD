@@ -29,6 +29,7 @@ set(PROJECT_SOURCES
         gamestate/GameState.h
         utils/gameUtil.h
         utils/localUtil.h
+        utils/InputReader.cpp
 )
 
 add_executable(danSQD ${PROJECT_SOURCES})

@@ -166,6 +166,8 @@ template FVector ReadMemory<FVector>(pid_t pid, long address);
 template VM::FCameraCacheEntry ReadMemory<VM::FCameraCacheEntry>(pid_t pid, long address);
 template PlayerStateFlags ReadMemory<PlayerStateFlags>(pid_t pid, long address);
 template uint8_t ReadMemory<uint8_t>(pid_t pid, long address);
+template uint32_t ReadMemory<uint32_t>(pid_t pid, long address);
+template VM::FMinimalViewInfo ReadMemory<VM::FMinimalViewInfo>(pid_t pid, long address);
 
 
 template bool WriteMemory<int>(pid_t pid, long address, const int& value);
@@ -183,7 +185,8 @@ template FVector ReadMemory<FVector>(uintptr_t address);
 template VM::FCameraCacheEntry ReadMemory<VM::FCameraCacheEntry>(uintptr_t address);
 template PlayerStateFlags ReadMemory<PlayerStateFlags>(uintptr_t address);
 template uint8_t ReadMemory<uint8_t>(uintptr_t address);
-
+template uint32_t ReadMemory<uint32_t>(uintptr_t address);
+template VM::FMinimalViewInfo ReadMemory<VM::FMinimalViewInfo>(uintptr_t address);
 
 //For reading player list or bone list and stuff
 // template TArray<uintptr_t> ReadMemory<TArray<uintptr_t>>(uintptr_t address);
