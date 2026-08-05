@@ -103,21 +103,6 @@ namespace off {
 }
 
 
-// Unique scope magnification levels in Squad (Sorted smallest to largest)
-inline std::vector<double> squadMagnifications = {
-    1.0,   // Variable default (SpecterDR, 1P87, A940 base zoom)
-    2.8,   // 1P78 Kashtan (RGF/VDV)
-    3.0,   // QMK-152 (PLA Chinese Infantry)
-    3.4,   // Elcan C79 (CAF Canadian Infantry)
-    3.5,   // PU Vintage Scope (Mosin Nagant)
-    4.0,   // Standard ACOG / Max zoom on variables / PSO-1 / 1P29 / G3 ZF
-    6.0,   // Universal Marksman / DMR zoom standard
-    8.0,   // USMC M27 SDO / C14 Timberwolf low-zoom
-    10.0,  // Standard Heavy Sniper zoom (M40A6, L115A3, CS/LR4, Hyperion)
-    16.0   // C14 Timberwolf max zoom (CAF Heavy Sniper)
-};
-
-
 namespace vtable {
 
 }

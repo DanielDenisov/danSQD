@@ -30,7 +30,9 @@ int main() {
         return 0;
     }
 
-    int scopeIndex = 0;
+    // Tracked in tenths (int) rather than as a float incremented by 0.1 directly,
+    // so repeated +/- presses can't drift off the 0.1 grid via float rounding error.
+    int scopeTenths = 10; // 1.0x
 
     GameState gs = GameState();
     while (g_Running && !glfwWindowShouldClose(window)) {
@@ -42,24 +44,28 @@ int main() {
         sprintf(buf, "Entities: %lu", gsr.ents.size());
         DrawTextImGui(10, 10, IM_COL32(255, 0, 0, 255), buf);
         inputReader.Poll();
+
+        double scopeMagnification = scopeTenths / 10.0;
         if (!inputReader.IsKeyDown(KEY_8)) {
-            ESP(gsr.vm, gsr.ents, gsr.vents, gsr.LPteam, squadMagnifications[scopeIndex], inputReader.IsRMBDown());
+            ESP(gsr.vm, gsr.ents, gsr.vents, gsr.LPteam, scopeMagnification, inputReader.IsRMBDown());
         }
 
-        if (inputReader.IsKeyDown(KEY_LEFTBRACE) &&
-            !inputReader.WasKeyPressed(KEY_LEFTBRACE)) {
-            scopeIndex--;
-            if (scopeIndex < 0) scopeIndex = 0;
+        // WasKeyPressed() alone fires only on the press edge; the previous
+        // `IsKeyDown() && !WasKeyPressed()` check did the opposite - it fired on
+        // every held frame *except* the first, so holding the key spammed the
+        // step every frame and could blow straight through to the min/max.
+        if (inputReader.WasKeyPressed(KEY_LEFTBRACE)) {
+            scopeTenths -= 1;
+            if (scopeTenths < 10) scopeTenths = 10; // min 1.0x
         }
 
-        if (inputReader.IsKeyDown(KEY_RIGHTBRACE) &&
-            !inputReader.WasKeyPressed(KEY_RIGHTBRACE)) {
-            scopeIndex++;
-            if (scopeIndex > squadMagnifications.size()-1) scopeIndex = squadMagnifications.size()-1;
+        if (inputReader.WasKeyPressed(KEY_RIGHTBRACE)) {
+            scopeTenths += 1;
+            if (scopeTenths > 160) scopeTenths = 160; // max 16.0x
         }
 
         char bufscope[64];
-        sprintf(bufscope, "Scope: %.1fx", squadMagnifications[scopeIndex]);
+        sprintf(bufscope, "Scope: %.1fx", scopeMagnification);
         DrawTextImGui(10, 30, IM_COL32(255, 0, 0, 255), bufscope);
 
         RenderEnd();
