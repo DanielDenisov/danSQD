@@ -164,22 +164,35 @@ inline void ESP(VM::FMinimalViewInfo vm, std::vector<PlayerEnt>& ents, std::vect
     // --- STEP 2: DRAW THE CLEAN MAGNIFIED SCOPE INTERIOR AREA ---
     if (isRMBDown && scopeMagnification > 1.01f) {
 
-        // Magnification pushes scoped entities' projected positions outward from
-        // center, so they can end up drawn well past the lens circle. Clip to the
-        // square inscribed *inside* the circle (side = r*sqrt(2)) rather than the
-        // square that circumscribes it - that guarantees nothing ever renders past
-        // the visible lens boundary. Clipping to the circumscribed square instead
-        // would let content bleed into the four corner slivers between the square
-        // and the circle, which is exactly the leftover "erase outside" bug.
-        float clipHalf = scopeGlassRadius / std::sqrt(2.0f);
-        ImVec2 clipMin(centerX - clipHalf, centerY - clipHalf);
-        ImVec2 clipMax(centerX + clipHalf, centerY + clipHalf);
-        drawList->PushClipRect(clipMin, clipMax, true);
+        // ImGui only offers rectangular clip rects, no native circular clip. A single
+        // square clip either leaks past the lens circle (circumscribed square) or
+        // wastes a big visible chunk of it (inscribed square). Approximate the circle
+        // instead as a stack of thin horizontal strips, each clipped to the circle's
+        // actual chord width at that row - a "staircase" circle. The clip maps
+        // straight to a GPU scissor test (essentially free) and scopePlayers is only
+        // ever a handful of entities, so redrawing them once per strip costs nothing
+        // measurable; more strips just makes the stepping finer/less visible.
+        constexpr int scopeClipBands = 32;
+        float bandHeight = (scopeGlassRadius * 2.0f) / scopeClipBands;
+        for (int i = 0; i < scopeClipBands; ++i) {
+            float y0 = centerY - scopeGlassRadius + i * bandHeight;
+            float y1 = y0 + bandHeight;
 
-        // Pass ONLY your scope-trapped target metrics to be processed by your magnified view profile
-        DrawEnts(scopeVM, scopePlayers, vents, LPteam, true);
+            // Use whichever edge of this strip sits farther from the centerline (the
+            // narrower of the two possible chords) so the whole rectangle stays
+            // safely inside the circle instead of poking past it at the strip's corners.
+            float d0 = y0 - centerY; if (d0 < 0) d0 = -d0;
+            float d1 = y1 - centerY; if (d1 < 0) d1 = -d1;
+            float dyFar = d0 > d1 ? d0 : d1;
+            if (dyFar >= scopeGlassRadius) continue; // strip falls entirely outside the lens
 
-        drawList->PopClipRect();
+            float halfWidth = std::sqrt(scopeGlassRadius * scopeGlassRadius - dyFar * dyFar);
+
+            drawList->PushClipRect(ImVec2(centerX - halfWidth, y0), ImVec2(centerX + halfWidth, y1), true);
+            // Pass ONLY your scope-trapped target metrics to be processed by your magnified view profile
+            DrawEnts(scopeVM, scopePlayers, vents, LPteam, true);
+            drawList->PopClipRect();
+        }
 
         // Draw structural scope frame outer rim circle overlay to complete the pipeline pass
         drawList->AddCircle(ImVec2(centerX, centerY), scopeGlassRadius, IM_COL32(0, 0, 0, 255), 64, 3.0f);

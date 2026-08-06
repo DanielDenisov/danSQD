@@ -16,6 +16,7 @@ struct PlayerEnt {
     ptr memoryID{};
     int32_t teamID{};
     FVector pos{};
+    FVector rot{};
     float health{100.f};
     std::string username{};
     PlayerStateFlags plFlags{};

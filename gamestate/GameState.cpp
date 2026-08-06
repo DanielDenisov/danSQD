@@ -99,6 +99,9 @@ std::vector<PlayerEnt> GameState::getEnts(ptr uworld) {
         ent.pos = ReadMemory<FVector>(rootComp + off::PW_POS);
         if (ent.pos.Dist(FVector{}) < 10) continue;
 
+        //Get Rotation info
+        ent.rot = ReadMemory<FVector>(rootComp + off::PW_ROT);
+
         //Get if Crouching
         uint8_t crouchByte = ReadMemory<uint8_t>(pawn + off::PW_IS_CROUCHED);
         ent.isCrouched = (crouchByte & 2);

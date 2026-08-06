@@ -57,7 +57,8 @@ namespace off {
     pr PW_ROOT_COMP = 0x1C0;
     //USceneComponent->RelativeLocation
     pr PW_POS = 0x148;
-    //TO ADD: If doing barrel ESP, would read rot, scale, pitch from here
+    //USceneComponent->RelativeRotation
+    pr PW_ROT = PW_POS + sizeof(double)*3;
     //ASQSoldier->Health
     pr PW_HEALTH = 0x2740; //float
     //ACharacter->bIsCrouched
